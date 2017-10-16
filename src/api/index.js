@@ -1,191 +1,83 @@
-import axios from 'axios'
-import config from './config'
-const WX_USER_TOKEN = 'wx.user.token'
-const devName = '-lzw'
-// 微信url
-const wxUrl = config.wxUrl
-const wxAppId = config.wxAppId
-const appId = config.appId
-
-var guidGenerator = function () {
-  return (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1)
+// 配置API接口地址
+var root = '/api/v1'
+// 引用axios
+var axios = require('axios')
+// 自定义判断元素类型JS
+function toType(obj) {
+	return({}).toString.call(obj).match(/\s([a-zA-Z]+)/)[1].toLowerCase()
 }
-var getUUID = function () {
-  return (guidGenerator() + guidGenerator() + guidGenerator() + guidGenerator() + guidGenerator() + guidGenerator() + guidGenerator() + guidGenerator())
+// 参数过滤函数
+function filterNull(o) {
+	for(var key in o) {
+		if(o[key] === null) {
+			delete o[key]
+		}
+		if(toType(o[key]) === 'string') {
+			o[key] = o[key].trim()
+		} else if(toType(o[key]) === 'object') {
+			o[key] = filterNull(o[key])
+		} else if(toType(o[key]) === 'array') {
+			o[key] = filterNull(o[key])
+		}
+	}
+	return o
+}
+/*
+  接口处理函数
+  这个函数每个项目都是不一样的，我现在调整的是适用于
+  https://cnodejs.org/api/v1 的接口，如果是其他接口
+  需要根据接口的参数进行调整。参考说明文档地址：
+  https://cnodejs.org/topic/5378720ed6e2d16149fa16bd
+  主要是，不同的接口的成功标识和失败提示是不一致的。
+  另外，不同的项目的处理方法也是不一致的，这里出错就是简单的alert
+*/
+
+function apiAxios(method, url, params, success, failure) {
+	if(params) {
+		params = filterNull(params)
+	}
+	axios({
+			method: method,
+			url: url,
+			data: method === 'POST' || method === 'PUT' ? params : null,
+			params: method === 'GET' || method === 'DELETE' ? params : null,
+			baseURL: root,
+			withCredentials: false
+		})
+		.then(function(res) {
+			if(res.data.success === true) {
+				if(success) {
+					success(res.data)
+				}
+			} else {
+				if(failure) {
+					failure(res.data)
+				} else {
+					window.alert('error: ' + JSON.stringify(res.data))
+				}
+			}
+		})
+		.catch(function(err) {
+			let res = err.response
+			if(err) {
+				window.alert('api error, HTTP CODE: ' + res.status)
+				return
+			}
+		})
 }
 
+// 返回在vue模板中的调用接口
 export default {
-  // 获取url参数封装方法
-  getQueryString (name) {
-    var reg = new RegExp('(^|&)' + name + '=([^&]*)(&|$)')
-    var r = window.location.search.substr(1).match(reg)
-    if (r != null) return unescape(r[2]); return null
-  },
-  captcha (param) {
-    var method = '/wechat' + devName + '/front/loginService/getValidateCode?requestId=' + getUUID() + '&token=' + global.localStorage.getItem(WX_USER_TOKEN) + '&appId=' + appId
-    return axios.post(method, JSON.stringify(param), config)
-  },
-  wechatCaptcha (param) {
-    var method = '/wechatAuth' + devName + '/auth/wechatCommonService/getWxCaptcha?requestId=' + getUUID() + '&token=' + global.localStorage.getItem(WX_USER_TOKEN) + '&appId=' + appId
-    return axios.post(method, JSON.stringify(param), config)
-  },
-  login (param) {
-    var method = '/wechat' + devName + '/front/loginService/login?requestId=' + getUUID() + '&appId=' + appId
-    return axios.post(method, JSON.stringify(param), config)
-  },
-  wechatLogin () {
-    var url = config.baseURL + '/wechatAuth' + devName + '/auth/wechatCommonService/wechatLogin?requestId=' + getUUID() + '&appId=' + appId
-    return url
-  },
-  loginAsync () {
-    var url = config.baseURL + '/wechat' + devName + '/front/loginService/login?requestId=' + getUUID() + '&appId=' + appId
-    return url
-  },
-  queryUserInfoByUserId (param) {
-    var method = '/wechat' + devName + '/front/chatWebService/getUserInfoByUserId?requestId=' + getUUID() + '&token=' + global.localStorage.getItem(WX_USER_TOKEN) + '&appId=' + appId
-    return axios.post(method, JSON.stringify(param), config)
-  },
-  // 待办查询
-  querywaitHandleLists (param) {
-    var method = '/wechat' + devName + '/front/waitHandleService/waitHandleLists?requestId=' + getUUID() + '&appId=' + appId + '&token=' + global.localStorage.getItem(WX_USER_TOKEN)
-    return axios.post(method, JSON.stringify(param), config)
-  },
-  // 确认待办
-  sureHandle (param) {
-    var method = '/wechat' + devName + '/front/waitHandleService/sureHandle?requestId=' + getUUID() + '&appId=' + appId + '&token=' + global.localStorage.getItem(WX_USER_TOKEN)
-    return axios.post(method, JSON.stringify(param), config)
-  },
-  // 查询取单
-  queryIndentLists (param) {
-    var method = '/wechat' + devName + '/front/InvokerService/takeSingle?requestId=' + getUUID() + '&appId=' + appId + '&token=' + global.localStorage.getItem(WX_USER_TOKEN)
-    return axios.post(method, JSON.stringify(param), config)
-  },
-  // 查询取单
-  queryIndentListsBywqd (param) {
-    var method = '/wechat' + devName + '/front/InvokerService/takeSingleByGdIdNew?requestId=' + getUUID() + '&appId=' + appId + '&token=' + global.localStorage.getItem(WX_USER_TOKEN)
-    return axios.post(method, JSON.stringify(param), config)
-  },
-  // 查询记账
-  queryTallyLists (param) {
-    var method = '/wechat' + devName + '/front/InvokerService/getAccounting?requestId=' + getUUID() + '&appId=' + appId + '&token=' + global.localStorage.getItem(WX_USER_TOKEN)
-    return axios.post(method, JSON.stringify(param), config)
-  },
-  // 查询记账
-  queryTallyListsByBeiJing (param) {
-    var method = '/wechat' + devName + '/front/InvokerService/getAccountingByBeiJing?requestId=' + getUUID() + '&appId=' + appId + '&token=' + global.localStorage.getItem(WX_USER_TOKEN)
-    return axios.post(method, JSON.stringify(param), config)
-  },
-  // 查询记账
-  queryTallyListsByYZF (param) {
-    var method = '/wechat' + devName + '/front/InvokerService/getAccountingByYZF?requestId=' + getUUID() + '&appId=' + appId + '&token=' + global.localStorage.getItem(WX_USER_TOKEN)
-    return axios.post(method, JSON.stringify(param), config)
-  },
-  // 查询报税
-  queryDutiableLists (param) {
-    var method = '/wechat' + devName + '/front/InvokerService/getTaxReturn?requestId=' + getUUID() + '&appId=' + appId + '&token=' + global.localStorage.getItem(WX_USER_TOKEN)
-    return axios.post(method, JSON.stringify(param), config)
-  },
-  // 查询报税
-  queryDutiableListsByYZF (param) {
-    var method = '/wechat' + devName + '/front/InvokerService/getTaxReturn?requestId=' + getUUID() + '&appId=' + appId + '&token=' + global.localStorage.getItem(WX_USER_TOKEN)
-    return axios.post(method, JSON.stringify(param), config)
-  },
-  // 查询企业服务信息
-  queryCusServiceLists (param) {
-    console.info(JSON.stringify(config))
-    var method = '/wechat' + devName + '/front/CusService/cusServiceLists?requestId=' + getUUID() + '&appId=' + appId + '&token=' + global.localStorage.getItem(WX_USER_TOKEN)
-    return axios.post(method, JSON.stringify(param), config)
-  },
-  queryFactoryInfo (param) {
-    var method = '/wechat' + devName + '/front/chatWebService/queryFactoryInfo?requestId=' + getUUID() + '&token=' + global.localStorage.getItem(WX_USER_TOKEN) + '&appId=' + appId
-    return axios.post(method, JSON.stringify(param), config)
-  },
-  // 根据企业id查询企业信息
-  querycustomerBycusId (param) {
-    var method = '/wechat' + devName + '/front/chatWebService/queryCustomerBycusId?requestId=' + getUUID() + '&token=' + global.localStorage.getItem(WX_USER_TOKEN) + '&appId=' + appId
-    return axios.post(method, JSON.stringify(param), config)
-  },
-  accessImcc (param) {
-    var method = '/wechat' + devName + '/front/onlineService/onlienInterface?requestId=' + getUUID() + '&token=' + global.localStorage.getItem(WX_USER_TOKEN) + '&appId=' + appId
-    return axios.post(method, JSON.stringify(param), config)
-  },
-  startManService () {
-    var url = 'https://open.weixin.qq.com/connect/oauth2/authorize?appid=' + wxAppId + '&redirect_uri=http%3A%2F%2F' + wxUrl + '%2Fthirdparty%2Focsp%2FstartManService&response_type=code&scope=snsapi_base&state=123#wechat_redirect'
-    return url
-  },
-  // 根据手机号码查询企业列表
-  queryCustomerListByMobile (param) {
-    var method = '/wechat' + devName + '/front/CusService/queryCustomerListByMobile?requestId=' + getUUID() + '&token=' + global.localStorage.getItem(WX_USER_TOKEN) + '&appId=' + appId
-    return axios.post(method, JSON.stringify(param), config)
-  },
-  // 根据纳税人或企业号查询
-  queryCustomerByNo (param) {
-    var method = '/wechat' + devName + '/front/CusService/queryCustomerByNo?requestId=' + getUUID() + '&token=' + global.localStorage.getItem(WX_USER_TOKEN) + '&appId=' + appId
-    return axios.post(method, JSON.stringify(param), config)
-  },
-  // 绑定联系人和客户（目前只能单个绑定）
-  bindWeChatCustomer (param) {
-    var method = '/wechat' + devName + '/front/CusService/bindWeChatCustomer?requestId=' + getUUID() + '&token=' + global.localStorage.getItem(WX_USER_TOKEN) + '&appId=' + appId
-    return axios.post(method, JSON.stringify(param), config)
-  },
-  // 绑定联系人和客户（目前只能单个绑定）--同步
-  bindWeChatCustomerAsync () {
-    var url = config.baseURL + '/wechat' + devName + '/front/CusService/bindWeChatCustomer?requestId=' + getUUID() + '&token=' + global.localStorage.getItem(WX_USER_TOKEN) + '&appId=' + appId
-    return url
-  },
-  // 查询报名列表
-  pageTrainDataAddress (param) {
-    var method = '/wechat' + devName + '/front/trainService/pageTrainDataAddress?requestId=' + getUUID() + '&token=' + global.localStorage.getItem(WX_USER_TOKEN) + '&appId=' + appId
-    return axios.post(method, JSON.stringify(param), config)
-  },
-  // 预约报名
-  enrollTrain (param) {
-    var method = '/wechat' + devName + '/front/trainService/enrollTrain?requestId=' + getUUID() + '&token=' + global.localStorage.getItem(WX_USER_TOKEN) + '&appId=' + appId
-    return axios.post(method, JSON.stringify(param), config)
-  },
-  autoLogin (param) {
-    param.wechatCode = 'WECHAT_CUS'
-    var method = '/wechatAuth' + devName + '/auth/wechatCommonService/autoLogin?requestId=' + getUUID() + '&token=' + global.localStorage.getItem(WX_USER_TOKEN) + '&appId=' + appId
-    return axios.post(method, JSON.stringify(param), config)
-  },
-  // 绑定企业之后发送消息到微信客户端
-  bindAfterSendMsg (param) {
-    var method = '/wechat' + devName + '/front/CusService/bindAfterSendMsg?requestId=' + getUUID() + '&token=' + global.localStorage.getItem(WX_USER_TOKEN) + '&appId=' + appId
-    return axios.post(method, JSON.stringify(param), config)
-  },
-  // 退出登录
-  logout () {
-    var param = {}
-    param.token = global.localStorage.getItem(WX_USER_TOKEN)
-    console.log(param)
-    var method = '/wechat' + devName + '/front/chatWebService/unBingingWechat?requestId=' + getUUID() + '&token=' + global.localStorage.getItem(WX_USER_TOKEN) + '&appId=' + appId
-    return axios.post(method, JSON.stringify(param), config)
-  },
-  // 人工客服
-  startArtificiallyService (param) {
-    var method = '/wechat' + devName + '/thirdparty/ocsp/startArtificiallyService?requestId=' + getUUID() + '&token=' + global.localStorage.getItem(WX_USER_TOKEN) + '&appId=' + appId
-    return axios.post(method, JSON.stringify(param), config)
-  },
-  // ca查询
-  queryCaFile (param) {
-    var method ='/wechat' + devName + '/thirdparty/ocsp/wechatCaFileService/queryCaFile?requestId=' + getUUID() + '&token=' + global.localStorage.getItem(WX_USER_TOKEN) + '&appId=' + appId
-    // var method = '/thirdparty/ocsp/wechatCaFileService/queryCaFile?requestId=' + getUUID() + '&token=' + global.localStorage.getItem(WX_USER_TOKEN) + '&appId=' + appId
-    return axios.post(method, JSON.stringify(param), config)
-  },
-  // ca删除
-  deleteCaFile (param) {
-    var method ='/wechat' + devName + '/thirdparty/ocsp/wechatCaFileService/deleteCaFile?requestId=' + getUUID() + '&token=' + global.localStorage.getItem(WX_USER_TOKEN) + '&appId=' + appId
-    // var method ='/thirdparty/ocsp/wechatCaFileService/deleteCaFile?requestId=' + getUUID() + '&token=' + global.localStorage.getItem(WX_USER_TOKEN) + '&appId=' + appId
-    return axios.post(method, JSON.stringify(param), config)
-  },
-  // 人员签到
-  signIn (param) {
-    var method = '/wechat' + devName + '/thirdparty/ocsp/wechatUserSignService/userSign?requestId=' + getUUID() + '&token=' + global.localStorage.getItem(WX_USER_TOKEN) + '&appId=' + appId
-    return axios.post(method, JSON.stringify(param), config)
-  },
-  // 人员上次签到信息
-  querySignInfo (param) {
-    var method = '/wechat' + devName + '/thirdparty/ocsp/wechatUserSignService/querySignInfo?requestId=' + getUUID() + '&token=' + global.localStorage.getItem(WX_USER_TOKEN) + '&appId=' + appId
-    return axios.post(method, JSON.stringify(param), config)
-  },
+	get: function(url, params, success, failure) {
+		return apiAxios('GET', url, params, success, failure)
+	},
+	post: function(url, params, success, failure) {
+		return apiAxios('POST', url, params, success, failure)
+	},
+	put: function(url, params, success, failure) {
+		return apiAxios('PUT', url, params, success, failure)
+	},
+	delete: function(url, params, success, failure) {
+		return apiAxios('DELETE', url, params, success, failure)
+	}
 }
