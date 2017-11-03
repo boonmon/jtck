@@ -1,3 +1,7 @@
 build/*.js
 config/*.js
+<<<<<<< HEAD
 node_modules
+=======
+src/api/index.js
+>>>>>>> 94d486b5692dd02dd967b8e4644eb35591a50049

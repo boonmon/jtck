@@ -3,7 +3,11 @@ root = true
 [*]
 charset = utf-8
 indent_style = space
+<<<<<<< HEAD
 indent_size = 2
+=======
+indent_size = 4
+>>>>>>> 94d486b5692dd02dd967b8e4644eb35591a50049
 end_of_line = lf
 insert_final_newline = true
 trim_trailing_whitespace = true

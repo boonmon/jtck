@@ -1,2 +1,6 @@
 node_modules
 *.log
+<<<<<<< HEAD
+=======
+dist/
+>>>>>>> 94d486b5692dd02dd967b8e4644eb35591a50049

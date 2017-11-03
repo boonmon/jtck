@@ -1,5 +1,24 @@
 {
+<<<<<<< HEAD
   "presets": ["es2015", "stage-2"],
   "plugins": ["transform-runtime"],
   "comments": false
+=======
+  "presets": [
+    ["env", {
+      "modules": false,
+      "targets": {
+        "browsers": ["> 1%", "last 2 versions", "not ie <= 8"]
+      }
+    }],
+    "stage-2"
+  ],
+  "plugins": ["transform-runtime"],
+  "env": {
+    "test": {
+      "presets": ["env", "stage-2"],
+      "plugins": ["istanbul"]
+    }
+  }
+>>>>>>> 94d486b5692dd02dd967b8e4644eb35591a50049
 }
