@@ -1,10 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-<<<<<<< HEAD
 	<name>wechat_test1</name>
-=======
-	<name>vueElement</name>
->>>>>>> 94d486b5692dd02dd967b8e4644eb35591a50049
 	<comment></comment>
 	<projects>
 	</projects>
@@ -18,18 +14,4 @@
 	<natures>
 		<nature>com.aptana.projects.webnature</nature>
 	</natures>
-<<<<<<< HEAD
-=======
-	<filteredResources>
-		<filter>
-			<id>1508228222778</id>
-			<name></name>
-			<type>26</type>
-			<matcher>
-				<id>org.eclipse.ui.ide.multiFilter</id>
-				<arguments>1.0-name-matches-false-false-node_modules</arguments>
-			</matcher>
-		</filter>
-	</filteredResources>
->>>>>>> 94d486b5692dd02dd967b8e4644eb35591a50049
 </projectDescription>
